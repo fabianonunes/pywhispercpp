@@ -35,7 +35,10 @@ py::function py_logits_filter_callback;
 // Thanks to https://github.com/pybind/pybind11/issues/2770
 struct whisper_context_wrapper {
     whisper_context* ptr;
+};
 
+struct whisper_state_wrapper {
+    whisper_state* ptr;
 };
 
 
@@ -280,12 +283,14 @@ float whisper_full_get_token_p_wrapper(struct whisper_context_wrapper * ctx, int
 
 // callbacks mechanism
 
-void _new_segment_callback(struct whisper_context * ctx, int n_new, void * user_data){
+void _new_segment_callback(struct whisper_context * ctx, struct whisper_state * state, int n_new, void * user_data){
     struct whisper_context_wrapper ctx_w;
     ctx_w.ptr = ctx;
+    struct whisper_state_wrapper state_w;
+    state_w.ptr = state;
     // call the python callback
 //    py::gil_scoped_acquire gil;  // Acquire the GIL while in this scope.
-    py_new_segment_callback(ctx_w, n_new, user_data);
+    py_new_segment_callback(ctx_w, state_w, n_new, user_data);
 };
 
 void assign_new_segment_callback(struct whisper_full_params *params, py::function f){
@@ -293,11 +298,13 @@ void assign_new_segment_callback(struct whisper_full_params *params, py::functio
     py_new_segment_callback = f;
 };
 
-bool _encoder_begin_callback(struct whisper_context * ctx, void * user_data){
+bool _encoder_begin_callback(struct whisper_context * ctx, struct whisper_state * state, void * user_data){
     struct whisper_context_wrapper ctx_w;
     ctx_w.ptr = ctx;
+    struct whisper_state_wrapper state_w;
+    state_w.ptr = state;
     // call the python callback
-    py::object result_py = py_encoder_begin_callback(ctx_w, user_data);
+    py::object result_py = py_encoder_begin_callback(ctx_w, state_w, user_data);
     bool res = result_py.cast<bool>();
     return res;
 }
@@ -309,14 +316,17 @@ void assign_encoder_begin_callback(struct whisper_full_params *params, py::funct
 
 void _logits_filter_callback(
         struct whisper_context * ctx,
+        struct whisper_state * state,
         const whisper_token_data * tokens,
         int   n_tokens,
         float * logits,
         void * user_data){
     struct whisper_context_wrapper ctx_w;
     ctx_w.ptr = ctx;
+    struct whisper_state_wrapper state_w;
+    state_w.ptr = state;
     // call the python callback
-    py_logits_filter_callback(ctx_w, n_tokens, logits, user_data);
+    py_logits_filter_callback(ctx_w, state_w, n_tokens, logits, user_data);
 }
 
 void assign_logits_filter_callback(struct whisper_full_params *params, py::function f){
