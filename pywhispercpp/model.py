@@ -71,7 +71,7 @@ class Model:
                  models_dir: str = None,
                  params_sampling_strategy: int = 0,
                  redirect_whispercpp_logs_to: Union[bool, TextIO, str, None] = False,
-                 use_openvino: bool = False,
+                 use_openvino: bool = True,
                  openvino_model_path: str = None,
                  openvino_device: str = 'CPU',
                  openvino_cache_dir: str = None,
